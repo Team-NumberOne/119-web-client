@@ -26,10 +26,6 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
-      - name: Configure npmrc for GitHub Packages
-        run: |
-          echo "@team-numberone:registry=https://npm.pkg.github.com" > .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -59,10 +55,6 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
-      - name: Configure npmrc for GitHub Packages
-        run: |
-          echo "@team-numberone:registry=https://npm.pkg.github.com" > .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
