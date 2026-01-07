@@ -23,6 +23,5 @@ jobs:
           destination-github-username: choihooo
           destination-repository-name: 119-web-client-dev
           user-email: ${{ secrets.EMAIL }}
-          commit-message: ${{ github.event.commits[0].message }}
+          commit-message: ${{ github.event.head_commit.message || 'Update from develop branch' }}
           target-branch: main
-
