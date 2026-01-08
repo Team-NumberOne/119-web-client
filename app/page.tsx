@@ -41,9 +41,9 @@ export default function HomePage() {
 	return (
 		<div className="h-full overflow-hidden flex flex-col">
 			{/* 그라디언트  섹션 */}
-			<div className="bg-green-gradient flex-76 pb-[20px] rounded-b-3xl shadow-layered overflow-hidden">
-				<div className="w-full text-center mt-[56px]">
-					<div className="text-gray-400 text-body-1 ">
+			<div className="bg-green-gradient flex-76 pb-[20px] rounded-b-3xl shadow-layered overflow-hidden flex flex-col">
+				<div className="w-full text-center mt-[clamp(46px,8svh,56px)] shrink-0">
+					<div className="text-gray-400 text-body-1">
 						어떤 상황을 연습해볼까요?
 					</div>
 					<div className="font-bold text-[26px] line-[32px] text-gray-700">
@@ -51,10 +51,13 @@ export default function HomePage() {
 					</div>
 				</div>
 
-				{/* 캐러셀 세션 */}
-				<EmergencySituationCarousel items={carouselItems} />
+				{/* 캐러셀: 남는 세로 공간 먹기 */}
+				<div className="flex-1 min-h-0 flex">
+					<EmergencySituationCarousel items={carouselItems} />
+				</div>
 
-				<div className="w-full px-[20px]">
+				{/* 버튼 */}
+				<div className="w-full px-[20px] shrink-0 pb-[clamp(12px,2svh,20px)]">
 					<Button variant="primary" className="w-full">
 						시작하기
 					</Button>
@@ -75,8 +78,8 @@ export default function HomePage() {
 							어떤 상황이 나올지 몰라요!
 						</span>
 						<br />
-						<span className="text-body-1 text-gray-600 font-bold">
-							실전처럼 연습하기
+						<span className="text-body-1-b text-gray-600">
+							실전 처럼 연습하기
 						</span>
 					</div>
 					<Icons.Start

@@ -19,6 +19,9 @@ export function EmergencySituationCarousel({
 }: EmergencySituationCarouselProps) {
 	const [currentIndex, setCurrentIndex] = useState(0);
 
+	// 안전장치: items가 비어있으면 렌더링 X
+	if (!items || items.length === 0) return null;
+
 	const handlePrevious = () => {
 		setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
 	};
@@ -30,26 +33,34 @@ export function EmergencySituationCarousel({
 	const currentItem = items[currentIndex];
 
 	return (
-		<>
-			{/* 캐러셀 세션 */}
-			<div className="flex-1 flex items-center justify-center my-[clamp(8px,2dvh,1.25rem)] relative">
+		<div className="w-full flex flex-col flex-1 min-h-0">
+			{/* 캐러셀 영역(남는 세로 공간을 카드가 먹는 영역) */}
+			<div className="relative flex-1 min-h-0 flex items-stretch justify-center my-[clamp(8px,2.7svh,1.25rem)]">
 				{/* 이전 버튼 */}
 				<button
 					type="button"
 					onClick={handlePrevious}
-					className="absolute left-4 z-10 w-6 h-6 flex items-center justify-center"
+					className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center"
 					aria-label="이전"
 				>
 					<Icons.ArrowLeft size={24} color="var(--color-gray-500)" />
 				</button>
 
 				{/* 캐러셀 카드 */}
-				<div className="max-w-[280px] bg-white rounded-[20px] h-[247px] border-2 border-solid border-white mx-[54px] w-full px-5 py-6">
+				<div className="max-w-[280px] w-full mx-[54px] bg-white rounded-[20px] border-2 border-solid border-white px-5 py-6 h-full">
+					{/* (선택) 캐릭터/일러스트 */}
+					{currentItem.character ? (
+						<div className="flex justify-center mb-3">
+							{currentItem.character}
+						</div>
+					) : null}
+
 					<div className="text-center mb-2">
 						<span className="inline-block px-[6px] py-1 bg-green-50 text-green-500 rounded-[6px] text-caption">
 							{currentItem.tag}
 						</span>
 					</div>
+
 					<div className="text-center">
 						<h3 className="text-h6 text-gray-600">{currentItem.title}</h3>
 					</div>
@@ -59,15 +70,15 @@ export function EmergencySituationCarousel({
 				<button
 					type="button"
 					onClick={handleNext}
-					className="absolute right-4 z-10 w-6 h-6 flex items-center justify-center"
+					className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center"
 					aria-label="다음"
 				>
 					<Icons.ArrowRight size={24} color="var(--color-gray-500)" />
 				</button>
 			</div>
 
-			{/* 페이지네이션 도트 */}
-			<div className="flex justify-center gap-1 mb-[clamp(8px,2dvh,1.25rem)]">
+			{/* 페이지네이션 도트 (아래 고정) */}
+			<div className="flex justify-center gap-1 mb-[clamp(8px,2.7svh,1.25rem)] shrink-0">
 				{items.map((item, index) => (
 					<button
 						key={item.id}
@@ -80,6 +91,6 @@ export function EmergencySituationCarousel({
 					/>
 				))}
 			</div>
-		</>
+		</div>
 	);
 }

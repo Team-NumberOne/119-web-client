@@ -190,6 +190,14 @@ body {
 		letter-spacing: var(--typography-body-1-letter-spacing);
 	}
 
+	.text-body-1-b {
+		font-family: var(--font-family-sans);
+		font-weight: 700;
+		font-size: var(--typography-body-1-font-size);
+		line-height: var(--typography-body-1-line-height);
+		letter-spacing: var(--typography-body-1-letter-spacing);
+	}
+
 	.text-subtitle-2 {
 		font-family: var(--font-family-sans);
 		font-weight: var(--typography-subtitle-2-font-weight);
