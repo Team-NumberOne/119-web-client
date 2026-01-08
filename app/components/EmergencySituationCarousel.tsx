@@ -2,13 +2,7 @@
 
 import { Icons } from "@team-numberone/daepiro-design-system";
 import { useState } from "react";
-
-interface CarouselItem {
-	id: string;
-	tag: string;
-	title: string;
-	character?: React.ReactNode;
-}
+import type { CarouselItem } from "../constants/practiceItems";
 
 interface EmergencySituationCarouselProps {
 	items: CarouselItem[];
