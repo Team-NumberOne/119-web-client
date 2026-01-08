@@ -1,30 +1,52 @@
 "use client";
 
 import { Icons } from "@team-numberone/daepiro-design-system";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CarouselItem } from "../constants/practiceItems";
 
 interface EmergencySituationCarouselProps {
 	items: CarouselItem[];
+	onSelect?: (situationId: string) => void;
 }
 
 export function EmergencySituationCarousel({
 	items,
+	onSelect,
 }: EmergencySituationCarouselProps) {
 	const [currentIndex, setCurrentIndex] = useState(0);
+
+	const currentItem = items?.[currentIndex];
+
+	// 초기 선택된 항목을 상위로 전달 (훅은 early return 전에 호출되어야 함)
+	useEffect(() => {
+		if (currentItem && onSelect) {
+			onSelect(currentItem.id);
+		}
+	}, [currentItem, onSelect]);
 
 	// 안전장치: items가 비어있으면 렌더링 X
 	if (!items || items.length === 0) return null;
 
 	const handlePrevious = () => {
-		setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
+		setCurrentIndex((prev) => {
+			const newIndex = prev === 0 ? items.length - 1 : prev - 1;
+			onSelect?.(items[newIndex].id);
+			return newIndex;
+		});
 	};
 
 	const handleNext = () => {
-		setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
+		setCurrentIndex((prev) => {
+			const newIndex = prev === items.length - 1 ? 0 : prev + 1;
+			onSelect?.(items[newIndex].id);
+			return newIndex;
+		});
 	};
 
-	const currentItem = items[currentIndex];
+	const handleDotClick = (index: number) => {
+		setCurrentIndex(index);
+		onSelect?.(items[index].id);
+	};
 
 	return (
 		<div className="w-full flex flex-col flex-1 min-h-0">
@@ -77,7 +99,7 @@ export function EmergencySituationCarousel({
 					<button
 						key={item.id}
 						type="button"
-						onClick={() => setCurrentIndex(index)}
+						onClick={() => handleDotClick(index)}
 						className={`w-[6px] h-[6px] rounded-full ${
 							index === currentIndex ? "bg-gray-500" : "bg-gray-100"
 						}`}
