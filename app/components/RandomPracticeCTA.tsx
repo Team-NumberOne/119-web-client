@@ -3,10 +3,10 @@ import { PhoneIcon } from "./PhoneIcon";
 
 export function RandomPracticeCTA() {
 	return (
-		<div className="pt-6 px-5 flex-11 flex items-center">
+		<div className="pt-6 px-5 flex-11 flex items-center justify-center">
 			<button
 				type="button"
-				className="bg-white w-full rounded-2xl flex gap-3 p-4 items-center"
+				className="bg-white w-full rounded-2xl flex gap-3 p-4 items-center max-w-[280px]"
 			>
 				<div className="bg-primary-400 rounded-full w-8 h-8 flex justify-center items-center shrink-0">
 					<PhoneIcon size={20} />
