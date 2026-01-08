@@ -1,5 +1,62 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 @import "@team-numberone/daepiro-design-system/dist/index.css";
 @import "tailwindcss";
+
+/* 모바일 스크롤 완전 차단 */
+html,
+body {
+	overflow: hidden;
+	position: fixed;
+	width: 100%;
+	-webkit-overflow-scrolling: none;
+}
+
+/* 동적 뷰포트 높이 (모바일 브라우저 주소창 고려) */
+html,
+body {
+	/* iOS Safari safe area 고려한 동적 뷰포트 높이 */
+	height: calc(100dvh - env(safe-area-inset-bottom, 0px));
+}
+
+/* iOS Safari 지원 */
+@supports (-webkit-touch-callout: none) {
+	html,
+	body {
+		height: -webkit-fill-available;
+		/* safe area를 고려한 최소 높이 */
+		min-height: calc(100vh - env(safe-area-inset-bottom, 0px));
+	}
+}
+
+/* 터치 스크롤 완전 차단 */
+body {
+	touch-action: none;
+	-ms-touch-action: none;
+}
+
+/* 모바일에서 스크롤 방지 (추가 보안) */
+* {
+	-webkit-overflow-scrolling: touch;
+}
+
+body > * {
+	overscroll-behavior: none;
+}
+
+/* Safe Area Support - 모바일 브라우저 툴바 대응 */
+@layer utilities {
+	.pb-safe {
+		padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+	}
+
+	.pt-safe {
+		padding-top: env(safe-area-inset-top, 0px);
+	}
+
+	.h-safe-screen {
+		height: calc(100dvh - env(safe-area-inset-bottom, 0px));
+	}
+}
 
 /*
  * Tailwind CSS v4 - @theme 블록을 사용한 CSS-first configuration
@@ -48,6 +105,23 @@
 	--color-primary-700: var(--color-secondary-700);
 	--color-primary-800: var(--color-secondary-800);
 	--color-primary-900: var(--color-secondary-900);
+
+	/* Pretendard 폰트 적용 */
+	--font-family-sans:
+		"Pretendard Variable", Pretendard, -apple-system,
+		BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI",
+		"Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji",
+		"Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+/* 전역 Pretendard 폰트 적용 */
+html,
+body {
+	font-family:
+		"Pretendard Variable", Pretendard, -apple-system,
+		BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI",
+		"Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji",
+		"Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 }
 
 /* 대피로 디자인 시스템 Typography - Utilities Layer */
