@@ -2,6 +2,7 @@
 
 import { Icon, Modal } from "@team-numberone/daepiro-design-system";
 import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { CallButton } from "./CallButton";
 import { DialButton } from "./DialButton";
@@ -16,6 +17,9 @@ const DIAL_BUTTONS = [
 export function DialPad() {
 	const [phoneNumber, setPhoneNumber] = useState("");
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const router = useRouter();
+	const params = useParams();
+	const situationId = params.situationId as string;
 
 	const handleNumberClick = (num: string) => {
 		setPhoneNumber((prev) => prev + num);
@@ -28,6 +32,10 @@ export function DialPad() {
 	const handleCall = () => {
 		setIsModalOpen(true);
 		console.log("Calling:", phoneNumber);
+	};
+
+	const handleStartCall = () => {
+		router.push(`/practice/${situationId}/dial/call`);
 	};
 
 	return (
@@ -79,7 +87,7 @@ export function DialPad() {
 				actionButton={{
 					label: "시작하기",
 					leftIcon: <Icon name="Phone" width={24} height={24} />,
-					onClick: () => setIsModalOpen(false),
+					onClick: handleStartCall,
 				}}
 			>
 				<div className="flex flex-col items-center gap-7">
