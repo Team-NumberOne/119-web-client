@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"preinstall": "node -e \"if (process.env.GITHUB_TOKEN || process.env.NPM_TOKEN) { require('fs').writeFileSync('.npmrc', '@team-numberone:registry=https://npm.pkg.github.com\\n//npm.pkg.github.com/:_authToken=' + (process.env.GITHUB_TOKEN || process.env.NPM_TOKEN) + '\\n'); }\"",
+		"preinstall": "node -e \"require('fs').writeFileSync('.npmrc', 'child-concurrency=1\\n'); if (process.env.GITHUB_TOKEN || process.env.NPM_TOKEN) { require('fs').appendFileSync('.npmrc', '@team-numberone:registry=https://npm.pkg.github.com\\n//npm.pkg.github.com/:_authToken=' + (process.env.GITHUB_TOKEN || process.env.NPM_TOKEN) + '\\n'); }\"",
 		"dev": "next dev --webpack",
 		"build": "next build --webpack",
 		"start": "next start",
