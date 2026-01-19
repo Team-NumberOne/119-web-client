@@ -2,7 +2,6 @@
 
 import { Button, Modal } from "@team-numberone/daepiro-design-system";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface PracticeOptionButtonProps {
@@ -15,17 +14,10 @@ export function PracticeOptionButton({
 	onClick,
 }: PracticeOptionButtonProps) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const router = useRouter();
-	const params = useParams();
-	const situationId = params.situationId as string;
 
 	const handleClick = () => {
 		setIsModalOpen(true);
 		onClick?.();
-	};
-
-	const handleGoToDial = () => {
-		router.push(`/practice/${situationId}/dial`);
 	};
 
 	return (
@@ -44,7 +36,7 @@ export function PracticeOptionButton({
 				showCloseButton={false}
 				actionButton={{
 					label: "다시 선택하기",
-					onClick: handleGoToDial,
+					onClick: () => setIsModalOpen(false),
 				}}
 			>
 				<div className="flex flex-col items-center gap-4">
