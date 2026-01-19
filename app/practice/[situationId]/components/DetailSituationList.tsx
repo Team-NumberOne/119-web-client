@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { DetailSituation } from "../../../constants/detailSituations";
 import { DetailSituationCard } from "./DetailSituationCard";
 
@@ -12,9 +13,10 @@ export function DetailSituationList({
 	situationId,
 	situations,
 }: DetailSituationListProps) {
+	const router = useRouter();
+
 	const handleCardClick = (detailId: string) => {
-		// TODO: 다음 단계로 이동하는 로직 구현
-		console.log(`Selected: ${situationId} - ${detailId}`);
+		router.push(`/practice/${situationId}/${detailId}`);
 	};
 
 	return (
