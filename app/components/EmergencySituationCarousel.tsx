@@ -1,7 +1,7 @@
 "use client";
 
-import { Icons } from "@team-numberone/daepiro-design-system";
 import { useEffect, useState } from "react";
+import { IconWrapper } from "../../components/icons/IconWrapper";
 import type { CarouselItem } from "../constants/practiceItems";
 
 interface EmergencySituationCarouselProps {
@@ -59,26 +59,29 @@ export function EmergencySituationCarousel({
 					className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center"
 					aria-label="이전"
 				>
-					<Icons.ArrowLeft size={24} color="var(--color-gray-500)" />
+					<IconWrapper
+						name="ArrowLeft"
+						size={24}
+						color="var(--color-gray-500)"
+					/>
 				</button>
 
 				{/* 캐러셀 카드 */}
-				<div className="max-w-[280px] w-full mx-[54px] bg-white rounded-[20px] border-2 border-solid border-white p-5 h-full">
-					{/* (선택) 캐릭터/일러스트 */}
-					{currentItem.character ? (
-						<div className="flex justify-center mb-3">
-							{currentItem.character}
+				<div className="relative max-w-[280px] w-full mx-[54px] bg-white rounded-[20px] border-2 border-solid border-white p-5 h-full overflow-hidden">
+					{/* 배경 이미지 */}
+					<div className="absolute inset-0 bg-[url('/dummy.png')] bg-contain bg-center bg-no-repeat" />
+
+					{/* 컨텐츠 */}
+					<div className="relative z-10">
+						<div className="text-center mb-2">
+							<span className="inline-block px-[6px] py-1 bg-green-50 text-green-500 rounded-[6px] text-caption">
+								{currentItem.tag}
+							</span>
 						</div>
-					) : null}
 
-					<div className="text-center mb-2">
-						<span className="inline-block px-[6px] py-1 bg-green-50 text-green-500 rounded-[6px] text-caption">
-							{currentItem.tag}
-						</span>
-					</div>
-
-					<div className="text-center">
-						<h3 className="text-h6 text-gray-600">{currentItem.title}</h3>
+						<div className="text-center">
+							<h3 className="text-h6 text-gray-600">{currentItem.title}</h3>
+						</div>
 					</div>
 				</div>
 
@@ -89,7 +92,11 @@ export function EmergencySituationCarousel({
 					className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center"
 					aria-label="다음"
 				>
-					<Icons.ArrowRight size={24} color="var(--color-gray-500)" />
+					<IconWrapper
+						name="ArrowRight"
+						size={24}
+						color="var(--color-gray-500)"
+					/>
 				</button>
 			</div>
 

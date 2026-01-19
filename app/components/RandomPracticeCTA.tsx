@@ -1,4 +1,6 @@
-import { Icons } from "@team-numberone/daepiro-design-system";
+"use client";
+
+import { IconWrapper } from "../../components/icons/IconWrapper";
 import { PhoneIcon } from "./PhoneIcon";
 
 export function RandomPracticeCTA() {
@@ -20,7 +22,8 @@ export function RandomPracticeCTA() {
 						실전 처럼 연습하기
 					</span>
 				</div>
-				<Icons.Start
+				<IconWrapper
+					name="Start"
 					size={24}
 					color="var(--color-gray-300)"
 					className="shrink-0"

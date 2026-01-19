@@ -1,6 +1,6 @@
 "use client";
 
-import { Icons } from "@team-numberone/daepiro-design-system";
+import { IconWrapper } from "../../../../components/icons/IconWrapper";
 import type { DetailSituation } from "../../../constants/detailSituations";
 
 interface DetailSituationCardProps {
@@ -22,7 +22,8 @@ export function DetailSituationCard({
 				<div className="text-primary-400 text-h5">{situation.location}</div>
 				<div className="text-gray-700 text-h5">{situation.description}</div>
 			</div>
-			<Icons.Start
+			<IconWrapper
+				name="Start"
 				size={32}
 				color="var(--color-gray-300)"
 				className="shrink-0"
