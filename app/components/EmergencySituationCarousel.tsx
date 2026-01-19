@@ -63,7 +63,7 @@ export function EmergencySituationCarousel({
 				</button>
 
 				{/* 캐러셀 카드 */}
-				<div className="max-w-[280px] w-full mx-[54px] bg-white rounded-[20px] border-2 border-solid border-white px-5 py-6 h-full">
+				<div className="max-w-[280px] w-full mx-[54px] bg-white rounded-[20px] border-2 border-solid border-white p-5 h-full">
 					{/* (선택) 캐릭터/일러스트 */}
 					{currentItem.character ? (
 						<div className="flex justify-center mb-3">
