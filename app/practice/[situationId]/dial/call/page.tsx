@@ -122,8 +122,9 @@ export default function CallPage() {
 				</div>
 				{/* Hint 박스 */}
 				<div
-					className="px-5 w-full h-[291px]"
+					className="px-5 w-full"
 					style={{
+						height: "clamp(200px, 18vw, 350px)",
 						paddingTop: "clamp(0.5rem, 2vw, 0.75rem)",
 						paddingBottom: "clamp(1.25rem, 3vw, 1.75rem)",
 					}}
