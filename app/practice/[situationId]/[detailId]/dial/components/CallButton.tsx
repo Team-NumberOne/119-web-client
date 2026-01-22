@@ -13,7 +13,11 @@ export function CallButton({ onClick, disabled }: CallButtonProps) {
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
-			className="w-16 h-16 rounded-full bg-primary-400 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+			className={`w-16 h-16 rounded-full flex items-center justify-center ${
+				disabled
+					? "opacity-40 bg-[#4DC585] cursor-not-allowed"
+					: "bg-[#4DC585] shadow-[0_10px_40px_0_rgba(103,255,174,0.80)]"
+			}`}
 		>
 			<Icon name="Phone" color="white" size={34} />
 		</button>

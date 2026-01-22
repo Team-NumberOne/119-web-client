@@ -61,7 +61,7 @@ export function DialPad() {
 				))}
 				{/* 액션 버튼 행 */}
 				<div /> {/* 빈 공간 */}
-				<CallButton onClick={handleCall} />
+				<CallButton onClick={handleCall} disabled={phoneNumber !== "119"} />
 				<button
 					type="button"
 					onClick={handleDelete}
