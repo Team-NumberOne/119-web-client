@@ -1,17 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import WaveSurfer from "wavesurfer.js";
-import RecordPlugin from "wavesurfer.js/dist/plugins/record.js";
+import { useCallback, useEffect, useState } from "react";
 import { IconWrapper } from "@/components/icons/IconWrapper";
+import { Waveform } from "./components/Waveform";
+import { useVoiceDetection } from "./hooks/useVoiceDetection";
 
 export default function CallPage() {
 	const [seconds, setSeconds] = useState(0);
 	const [isRecording, setIsRecording] = useState(false);
-	const waveformRef = useRef<HTMLDivElement>(null);
-	const wavesurferRef = useRef<WaveSurfer | null>(null);
-	const recordRef = useRef<RecordPlugin | null>(null);
 
 	// 통화 시간 타이머
 	useEffect(() => {
@@ -22,70 +19,35 @@ export default function CallPage() {
 		return () => clearInterval(timer);
 	}, []);
 
-	// WaveSurfer 초기화 (녹음 시작 시)
-	useEffect(() => {
-		if (!isRecording || !waveformRef.current || wavesurferRef.current) return;
+	// 자동 일시정지 함수
+	const handleAutoPause = useCallback(() => {
+		console.log("[Auto Pause] 자동 일시정지 실행");
+		setIsRecording(false);
+	}, []);
 
-		const wavesurfer = WaveSurfer.create({
-			container: waveformRef.current,
-			waveColor: "#D1D5DB",
-			progressColor: "#D1D5DB",
-			cursorColor: "transparent",
-			barWidth: 2,
-			barGap: 2,
-			barRadius: 99,
-			barMinHeight: 2, // 최소 높이를 1로 설정하여 작은 소리도 표현
-			normalize: true, // 정규화를 유지하여 전체 높이 활용
-			hideScrollbar: true,
-			height: 24, // 높이를 2배로 늘려서 더 민감하게 보이도록
-		});
+	// Voice Detection 훅 사용
+	const { analyserNode, cleanup } = useVoiceDetection({
+		isRecording,
+		onAutoPause: handleAutoPause,
+	});
 
-		// Record 플러그인 설정 (기존 유지)
-		const record = wavesurfer.registerPlugin(
-			RecordPlugin.create({
-				scrollingWaveform: true, // 실시간으로 파형이 옆으로 흐르게 합니다.
-				scrollingWaveformWindow: 20, // 화면에 10초 분량의 파형을 보여줍니다.
-			}),
-		);
-
-		wavesurferRef.current = wavesurfer;
-		recordRef.current = record;
-
-		// 마이크 시작
-		record.startMic().catch((error) => {
-			console.error("마이크 접근 오류:", error);
-			alert("마이크 접근 권한이 필요합니다.");
+	// 마이크 시작/중지
+	const handleMicClick = useCallback(() => {
+		if (!isRecording) {
+			console.log("[Mic] 녹음 시작");
+			setIsRecording(true);
+		} else {
+			console.log("[Mic] 녹음 중지 (수동)");
+			cleanup();
 			setIsRecording(false);
-		});
-		record.startRecording();
-
-		return () => {
-			if (wavesurferRef.current) {
-				wavesurferRef.current.destroy();
-				wavesurferRef.current = null;
-				recordRef.current = null;
-			}
-		};
-	}, [isRecording]);
+		}
+	}, [isRecording, cleanup]);
 
 	// 시간 포맷팅 (00:00)
 	const formatTime = (totalSeconds: number) => {
 		const mins = Math.floor(totalSeconds / 60);
 		const secs = totalSeconds % 60;
 		return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-	};
-
-	// 마이크 시작/중지
-	const handleMicClick = () => {
-		if (!isRecording) {
-			setIsRecording(true);
-		} else {
-			if (recordRef.current) {
-				recordRef.current.stopRecording();
-				recordRef.current.stopMic();
-			}
-			setIsRecording(false);
-		}
 	};
 
 	return (
@@ -184,17 +146,7 @@ export default function CallPage() {
 						</div>
 						<div className="bg-white rounded-full w-full flex items-center shadow-sm gap-3 pl-4 pr-3 py-3">
 							{/* 음성 파형 */}
-							<div
-								ref={waveformRef}
-								className="flex-1 h-6 overflow-hidden"
-								style={{
-									width: "208px",
-									// backgroundImage: "radial-gradient(circle at center, #D1D5DB 1.25px, transparent 1.25px)",
-									// backgroundSize: "4.5px 100%",
-									// backgroundPosition: "center",
-									// backgroundRepeat: "repeat-x",
-								}}
-							/>
+							<Waveform analyserNode={analyserNode} isActive={isRecording} />
 							{/* 일시정지 버튼 */}
 							<button
 								type="button"
