@@ -93,8 +93,8 @@ export function DialPad() {
 				<div className="flex flex-col items-center gap-7">
 					<div className="relative w-[140px] h-[140px]">
 						<Image
-							src="/dummy.png"
-							alt="통화 중"
+							src="/practice/practice-start-popup.png"
+							alt="통화 시작"
 							width={140}
 							height={140}
 							className="object-contain"
