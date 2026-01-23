@@ -13,16 +13,13 @@ interface RequestOptions extends RequestInit {
  */
 class ApiClient {
 	private getBaseUrl(): string {
-		// 런타임에 base URL 결정
-		// 서버 사이드에서는 절대 URL 필요
-		if (typeof window === "undefined") {
-			return (
-				process.env.NEXT_PUBLIC_API_BASE_URL || "http://api.daepiro.site/api/v1"
-			);
+		// 환경 변수가 설정되어 있으면 사용
+		if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+			return process.env.NEXT_PUBLIC_API_BASE_URL;
 		}
 
-		// 클라이언트 사이드에서는 rewrites를 통해 상대 경로 사용
-		return "/api";
+		// 프로덕션에서는 rewrites가 작동하지 않을 수 있으므로 절대 URL 사용
+		return "http://api.daepiro.site/api/v1";
 	}
 
 	async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
