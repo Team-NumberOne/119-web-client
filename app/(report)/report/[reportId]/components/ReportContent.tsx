@@ -1,6 +1,11 @@
 "use client";
 
 import { Button } from "@team-numberone/daepiro-design-system";
+import { useRouter } from "next/navigation";
+import {
+	detailSituations,
+	type SituationId,
+} from "@/app/(default)/constants/detailSituations";
 import { IconWrapper } from "@/components/icons/IconWrapper";
 import { useReport } from "../hooks/useReport";
 import {
@@ -15,8 +20,68 @@ interface ReportContentProps {
 
 export function ReportContent({ reportId }: ReportContentProps) {
 	const { data: result } = useReport(reportId);
+	const router = useRouter();
 
 	const imagePath = getReportImagePaths(result.title);
+
+	// 결과지 공유하기
+	const handleShare = async () => {
+		const shareData = {
+			title: `${result.title} - ${result.totalScore}점`,
+			text: `119 신고 연습 결과: ${result.title}\n총점: ${result.totalScore}점\n${result.comment}`,
+			url: window.location.href,
+		};
+
+		if (navigator.share) {
+			try {
+				await navigator.share(shareData);
+			} catch (error) {
+				// 사용자가 공유를 취소한 경우 무시
+				if ((error as Error).name !== "AbortError") {
+					console.error("공유 실패:", error);
+				}
+			}
+		} else {
+			// Web Share API를 지원하지 않는 경우 클립보드에 복사
+			try {
+				await navigator.clipboard.writeText(window.location.href);
+				alert("링크가 클립보드에 복사되었습니다.");
+			} catch (error) {
+				console.error("클립보드 복사 실패:", error);
+				alert("공유 기능을 사용할 수 없습니다.");
+			}
+		}
+	};
+
+	// 다시하기 (랜덤 연습)
+	const handleRetry = () => {
+		// 모든 상세상황을 평탄화하여 배열로 만들기
+		const allDetailSituations: Array<{
+			situationId: SituationId;
+			detailId: string;
+		}> = [];
+
+		(Object.keys(detailSituations) as SituationId[]).forEach((situationId) => {
+			detailSituations[situationId].forEach((detail) => {
+				allDetailSituations.push({
+					situationId,
+					detailId: detail.id,
+				});
+			});
+		});
+
+		// 랜덤으로 하나 선택
+		const randomIndex = Math.floor(Math.random() * allDetailSituations.length);
+		const selected = allDetailSituations[randomIndex];
+
+		// 다이얼 페이지로 이동
+		router.push(`/practice/${selected.situationId}/${selected.detailId}/dial`);
+	};
+
+	// 홈으로 돌아가기
+	const handleGoHome = () => {
+		router.push("/");
+	};
 
 	return (
 		<div className="px-5">
@@ -102,7 +167,7 @@ export function ReportContent({ reportId }: ReportContentProps) {
 			{/* 버튼들 */}
 			<div className="flex flex-col gap-3 mt-auto pb-6">
 				<div className="flex gap-3">
-					<Button className="bg-[#EEEEF3]">
+					<Button className="bg-[#EEEEF3]" onClick={handleShare}>
 						<div className="text-body-1 font-bold text-gray-600 w-[130px]">
 							결과지 공유하기
 						</div>
@@ -111,11 +176,15 @@ export function ReportContent({ reportId }: ReportContentProps) {
 					<Button
 						className="border-2 border-solid border-[#EEEEF3] bg-white"
 						full
+						onClick={handleRetry}
 					>
 						<div className="text-body-1 font-bold text-gray-500">다시하기</div>
 					</Button>
 				</div>
-				<Button className="w-full bg-green-500 text-white font-bold">
+				<Button
+					className="w-full bg-green-500 text-white font-bold"
+					onClick={handleGoHome}
+				>
 					홈으로 돌아가기
 				</Button>
 			</div>

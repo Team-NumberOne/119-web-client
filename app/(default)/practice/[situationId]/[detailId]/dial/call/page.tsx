@@ -43,10 +43,18 @@ export default function CallPage() {
 	const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [hasProcessedAnswer, setHasProcessedAnswer] = useState(false);
+	const conversationScriptRef = useRef<ConversationScript[]>([]);
 	const params = useParams();
 	const router = useRouter();
 	const detailId = (params.detailId as string) || "";
 	const situationId = params.situationId as string;
+
+	// 질문 인덱스가 0으로 리셋될 때 대화 스크립트도 초기화
+	useEffect(() => {
+		if (currentQuestionIndex === 0) {
+			conversationScriptRef.current = [];
+		}
+	}, [currentQuestionIndex]);
 
 	// detailId가 없으면 기본값 설정 (랜덤 연습 등에서 직접 접근한 경우)
 	useEffect(() => {
@@ -157,18 +165,19 @@ export default function CallPage() {
 
 		setHasProcessedAnswer(true);
 
+		// 대화 스크립트에 추가
+		conversationScriptRef.current = [
+			...conversationScriptRef.current,
+			newScript,
+		];
+
 		// 다음 질문으로 이동 또는 완료
 		if (currentQuestionIndex < QUESTIONS.length - 1) {
 			const nextIndex = currentQuestionIndex + 1;
-			setConversationScript((prev) => [...prev, newScript]);
 			setCurrentQuestionIndex(nextIndex);
 		} else {
 			// 5번 질문 완료 - API 호출
-			setConversationScript((prev) => {
-				const updatedScript = [...prev, newScript];
-				handleSubmitConversation(updatedScript);
-				return updatedScript;
-			});
+			handleSubmitConversation(conversationScriptRef.current);
 		}
 		resetTranscript();
 	}, [
