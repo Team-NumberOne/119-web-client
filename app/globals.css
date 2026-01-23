@@ -2,15 +2,6 @@
 @import "@team-numberone/daepiro-design-system/dist/index.css";
 @import "tailwindcss";
 
-/* 모바일 스크롤 완전 차단 */
-html,
-body {
-	overflow: hidden;
-	position: fixed;
-	width: 100%;
-	-webkit-overflow-scrolling: none;
-}
-
 /* 동적 뷰포트 높이 (모바일 브라우저 주소창 고려) */
 html,
 body {
@@ -28,18 +19,17 @@ body {
 	}
 }
 
-/* 터치 스크롤 완전 차단 */
-body {
+/* 모바일 스크롤 차단 클래스 */
+.no-scroll {
+	overflow: hidden;
+	position: fixed;
+	width: 100%;
+	-webkit-overflow-scrolling: none;
 	touch-action: none;
 	-ms-touch-action: none;
 }
 
-/* 모바일에서 스크롤 방지 (추가 보안) */
-* {
-	-webkit-overflow-scrolling: touch;
-}
-
-body > * {
+.no-scroll > * {
 	overscroll-behavior: none;
 }
 
