@@ -4,30 +4,14 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconWrapper } from "@/components/icons/IconWrapper";
+import {
+	type ConversationScript,
+	submitConversation,
+} from "@/lib/api/bbiyoung";
 import { getSituationIdForAPI } from "../../../../../utils/situationIdMapping";
 import { Waveform } from "./components/Waveform";
 import { useSpeechToText } from "./hooks/useSpeechToText";
 import { useVoiceDetection } from "./hooks/useVoiceDetection";
-
-interface ConversationScript {
-	question: string;
-	answer: string;
-}
-
-interface BbiyoungResponse {
-	code: number;
-	message: string;
-	data: {
-		resultId: number;
-		title: string;
-		totalScore: number;
-		itemScores: Array<{
-			title: string;
-			score: number;
-		}>;
-		comment: string;
-	};
-}
 
 const QUESTIONS = [
 	"어떤 일이 발생했나요?",
@@ -111,33 +95,14 @@ export default function CallPage() {
 				const apiId = getSituationIdForAPI(detailId);
 				const clientIP = await getClientIP();
 
-				const response = await fetch(
-					"http://api.daepiro.site/api/v1/bbiyoung",
-					{
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
-							accept: "*/*",
-						},
-						body: JSON.stringify({
-							ip: clientIP,
-							id: apiId,
-							script,
-						}),
-					},
-				);
+				const result = await submitConversation({
+					ip: clientIP,
+					id: String(apiId),
+					script,
+				});
 
-				if (!response.ok) {
-					throw new Error(`API 호출 실패: ${response.status}`);
-				}
-
-				const data: BbiyoungResponse = await response.json();
-				if (data.code === 1000) {
-					// 리포트 페이지로 리다이렉트
-					router.push(`/report/${data.data.resultId}`);
-				} else {
-					throw new Error(data.message);
-				}
+				// 리포트 페이지로 리다이렉트
+				router.push(`/report/${result.resultId}`);
 			} catch (error) {
 				console.error("[API] 오류:", error);
 				alert("결과를 가져오는 중 오류가 발생했습니다.");
