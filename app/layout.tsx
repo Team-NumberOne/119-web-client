@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
-import { DesktopPlaceholder } from "./components/DesktopPlaceholder";
 import "./globals.css";
+import { QueryProvider } from "./providers/QueryProvider";
 
 export const metadata: Metadata = {
 	title: "삐용",
@@ -17,33 +15,15 @@ export const viewport: Viewport = {
 	viewportFit: "cover",
 };
 
-function MobileOnly({ children }: { children: React.ReactNode }) {
-	return <div className="block sm:hidden">{children}</div>;
-}
-
-function DesktopOnly({ children }: { children: React.ReactNode }) {
-	return <div className="hidden sm:block">{children}</div>;
-}
-
 export default function RootLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
 	return (
-		<html lang="ko" className="h-full overflow-hidden">
-			<body className="h-full overflow-hidden bg-gray-50">
-				<MobileOnly>
-					<div className="h-[100dvh] overflow-hidden flex flex-col flex-1">
-						<Header />
-						<main className="flex-87 overflow-hidden">{children}</main>
-						<Footer />
-					</div>
-				</MobileOnly>
-
-				<DesktopOnly>
-					<DesktopPlaceholder />
-				</DesktopOnly>
+		<html lang="ko" className="h-full">
+			<body className="h-full bg-gray-50 no-scroll">
+				<QueryProvider>{children}</QueryProvider>
 			</body>
 		</html>
 	);

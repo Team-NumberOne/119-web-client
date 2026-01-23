@@ -6,7 +6,15 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"includes": [
+			"**/*.ts",
+			"**/*.tsx",
+			"**/*.js",
+			"**/*.jsx",
+			"!!**/public/worklet.js",
+			"!!**/public/model.onnx"
+		]
 	},
 	"formatter": {
 		"enabled": true,
