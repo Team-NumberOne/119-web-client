@@ -36,6 +36,11 @@ export function DialPad() {
 	};
 
 	const handleStartCall = () => {
+		// 음성 재생 활성화를 위한 사용자 상호작용 플래그 설정
+		// CallButton 클릭을 사용자 상호작용으로 인정
+		if (typeof window !== "undefined") {
+			sessionStorage.setItem("audioEnabled", "true");
+		}
 		router.push(`/practice/${situationId}/${detailId}/dial/call`);
 	};
 
