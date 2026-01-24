@@ -9,6 +9,7 @@ import {
 	submitConversation,
 } from "@/lib/api/bbiyoung";
 import { getSituationIdForAPI } from "../../../../../utils/situationIdMapping";
+import { CallEndPopup } from "./components/CallEndPopup";
 import { Waveform } from "./components/Waveform";
 import { useSpeechToText } from "./hooks/useSpeechToText";
 import { useVoiceDetection } from "./hooks/useVoiceDetection";
@@ -27,6 +28,8 @@ export default function CallPage() {
 	const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [hasProcessedAnswer, setHasProcessedAnswer] = useState(false);
+	const [showEndPopup, setShowEndPopup] = useState(false);
+	const [reportId, setReportId] = useState<number | null>(null);
 	const conversationScriptRef = useRef<ConversationScript[]>([]);
 	const params = useParams();
 	const router = useRouter();
@@ -101,8 +104,9 @@ export default function CallPage() {
 					script,
 				});
 
-				// 리포트 페이지로 리다이렉트
-				router.push(`/report/${result.resultId}`);
+				// 팝업 표시
+				setReportId(result.resultId);
+				setShowEndPopup(true);
 			} catch (error) {
 				console.error("[API] 오류:", error);
 				alert("결과를 가져오는 중 오류가 발생했습니다.");
@@ -110,7 +114,7 @@ export default function CallPage() {
 				setIsSubmitting(false);
 			}
 		},
-		[detailId, isSubmitting, getClientIP, router],
+		[detailId, isSubmitting, getClientIP],
 	);
 
 	// 답변 완료 처리 (자동 일시정지 또는 수동 중지 시)
@@ -325,6 +329,16 @@ export default function CallPage() {
 					</div>
 				)}
 			</div>
+
+			{/* 전화 종료 팝업 */}
+			{reportId !== null && (
+				<CallEndPopup
+					isOpen={showEndPopup}
+					onViewResult={() => {
+						router.push(`/report/${reportId}`);
+					}}
+				/>
+			)}
 		</div>
 	);
 }
