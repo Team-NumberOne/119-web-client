@@ -19,7 +19,7 @@ class ApiClient {
 		}
 
 		// 프로덕션에서는 rewrites가 작동하지 않을 수 있으므로 절대 URL 사용
-		return "http://api.daepiro.site/api/v1";
+		return "https://api.daepiro.site/api/v1";
 	}
 
 	async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {

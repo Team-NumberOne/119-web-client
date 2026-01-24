@@ -21,7 +21,7 @@ export function PracticeQuestionContent({
 				<div className="w-full bg-white rounded-[20px] p-6 flex flex-col gap-4">
 					{/* 질문 */}
 					<div className="text-center">
-						<h2 className="text-h5 text-gray-700 mb-3">{question.question}</h2>
+						<h2 className="text-h5 text-gray-700 mb-3">어떤 상황이야?</h2>
 						<p className="text-body-1 text-gray-600">{question.situation}</p>
 					</div>
 

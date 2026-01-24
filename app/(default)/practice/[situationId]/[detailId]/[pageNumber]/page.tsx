@@ -52,12 +52,12 @@ export default async function PracticeQuestionPage({
 	return (
 		<div className="h-full overflow-hidden flex flex-col gap-[28px]">
 			<div className="text-center flex flex-col gap-1 mt-[70px]">
-				<div className="text-body-1 text-gray-400">
-					이 상황에서 어떻게 행동해야 할까요?
-				</div>
-				<div className="text-h5 text-gray-600">
-					{situation.location} {situation.description}
-				</div>
+				<div className="text-body-1 text-gray-400">어떻게 행동할까?</div>
+				<div
+					className="text-h5 text-gray-600"
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: question.situation contains safe HTML from constants
+					dangerouslySetInnerHTML={{ __html: question.situation }}
+				/>
 			</div>
 			<div
 				className="bg-white flex items-center justify-center flex-1 min-h-0 mx-5 rounded-[20px] shadow-layered bg-cover bg-center bg-no-repeat"
