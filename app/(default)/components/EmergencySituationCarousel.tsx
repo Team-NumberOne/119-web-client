@@ -69,7 +69,14 @@ export function EmergencySituationCarousel({
 				{/* 캐러셀 카드 */}
 				<div className="relative max-w-[280px] w-full mx-[54px] bg-white rounded-[20px] border-2 border-solid border-white p-5 h-full overflow-hidden">
 					{/* 배경 이미지 */}
-					<div className="absolute inset-0 bg-[url('/dummy.png')] bg-contain bg-center bg-no-repeat" />
+					<div
+						className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+						style={{
+							backgroundImage: `url('/start-situation/start-situation-${
+								currentIndex + 1
+							}.png')`,
+						}}
+					/>
 
 					{/* 컨텐츠 */}
 					<div className="relative z-10">
