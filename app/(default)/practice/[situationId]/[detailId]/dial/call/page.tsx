@@ -1,18 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { IconWrapper } from "@/components/icons/IconWrapper";
-import {
-	type ConversationScript,
-	submitConversation,
-} from "@/lib/api/bbiyoung";
-import { getSituationIdForAPI } from "../../../../../utils/situationIdMapping";
 import { CallEndPopup } from "./components/CallEndPopup";
-import { Waveform } from "./components/Waveform";
-import { useSpeechToText } from "./hooks/useSpeechToText";
-import { useVoiceDetection } from "./hooks/useVoiceDetection";
 
 const QUESTIONS = [
 	"어떤 일이 발생했나요?",
@@ -24,30 +15,19 @@ const QUESTIONS = [
 
 export default function CallPage() {
 	const [seconds, setSeconds] = useState(0);
-	const [isRecording, setIsRecording] = useState(false);
-	const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [hasProcessedAnswer, setHasProcessedAnswer] = useState(false);
-	const [showEndPopup, setShowEndPopup] = useState(false);
-	const [reportId, setReportId] = useState<number | null>(null);
-	const conversationScriptRef = useRef<ConversationScript[]>([]);
+	const [currentQuestionIndex] = useState(0);
+	const [showEndPopup] = useState(false);
+	const [reportId] = useState<number | null>(null);
 	const params = useParams();
 	const router = useRouter();
 	const detailId = (params.detailId as string) || "";
 	const situationId = params.situationId as string;
 
-	// 질문 인덱스가 0으로 리셋될 때 대화 스크립트도 초기화
-	useEffect(() => {
-		if (currentQuestionIndex === 0) {
-			conversationScriptRef.current = [];
-		}
-	}, [currentQuestionIndex]);
-
 	// detailId가 없으면 기본값 설정 (랜덤 연습 등에서 직접 접근한 경우)
 	useEffect(() => {
 		if (!detailId && situationId) {
 			// situationId에 해당하는 첫 번째 detailId로 리다이렉트
-			import("../../../../../constants/detailSituations").then(
+			import("../../../../_constants/detailSituations").then(
 				({ detailSituations }) => {
 					const situations =
 						detailSituations[situationId as keyof typeof detailSituations];
@@ -70,139 +50,6 @@ export default function CallPage() {
 
 		return () => clearInterval(timer);
 	}, []);
-
-	// Speech-to-Text 훅 사용
-	const { transcript, resetTranscript } = useSpeechToText({
-		isRecording,
-	});
-
-	// 실제 클라이언트 IP 가져오기
-	const getClientIP = useCallback(async (): Promise<string> => {
-		try {
-			const response = await fetch("https://api.ipify.org?format=json");
-			const data = await response.json();
-			return data.ip || "192.168.1.1";
-		} catch (error) {
-			console.error("[IP] IP 조회 실패:", error);
-			return "192.168.1.1"; // 기본값
-		}
-	}, []);
-
-	// API 호출 함수
-	const handleSubmitConversation = useCallback(
-		async (script: ConversationScript[]) => {
-			if (isSubmitting) return;
-
-			setIsSubmitting(true);
-			try {
-				const apiId = getSituationIdForAPI(detailId);
-				const clientIP = await getClientIP();
-
-				const result = await submitConversation({
-					ip: clientIP,
-					id: String(apiId),
-					script,
-				});
-
-				// 팝업 표시
-				setReportId(result.resultId);
-				setShowEndPopup(true);
-			} catch (error) {
-				console.error("[API] 오류:", error);
-				alert("결과를 가져오는 중 오류가 발생했습니다.");
-			} finally {
-				setIsSubmitting(false);
-			}
-		},
-		[detailId, isSubmitting, getClientIP],
-	);
-
-	// 답변 완료 처리 (자동 일시정지 또는 수동 중지 시)
-	const handleAnswerComplete = useCallback(() => {
-		// 이미 처리된 경우 중복 호출 방지
-		if (hasProcessedAnswer) {
-			return;
-		}
-
-		const currentQuestion = QUESTIONS[currentQuestionIndex];
-		const answerText = transcript.trim() || ""; // 빈 답변도 허용
-
-		const newScript: ConversationScript = {
-			question: currentQuestion,
-			answer: answerText,
-		};
-
-		setHasProcessedAnswer(true);
-
-		// 대화 스크립트에 추가
-		conversationScriptRef.current = [
-			...conversationScriptRef.current,
-			newScript,
-		];
-
-		// 다음 질문으로 이동 또는 완료
-		if (currentQuestionIndex < QUESTIONS.length - 1) {
-			const nextIndex = currentQuestionIndex + 1;
-			setCurrentQuestionIndex(nextIndex);
-		} else {
-			// 5번 질문 완료 - API 호출
-			handleSubmitConversation(conversationScriptRef.current);
-		}
-		resetTranscript();
-	}, [
-		transcript,
-		currentQuestionIndex,
-		hasProcessedAnswer,
-		resetTranscript,
-		handleSubmitConversation,
-	]);
-
-	// 녹음이 중지되었을 때 자동으로 답변 완료 처리
-	const prevIsRecordingRef = useRef(isRecording);
-
-	useEffect(() => {
-		// 녹음이 시작되면 처리 플래그 리셋
-		if (isRecording) {
-			setHasProcessedAnswer(false);
-			prevIsRecordingRef.current = isRecording;
-			return;
-		}
-
-		// 녹음이 true에서 false로 변경되었을 때만 처리 (실제 녹음 중지 감지)
-		const wasRecording = prevIsRecordingRef.current;
-		prevIsRecordingRef.current = isRecording;
-
-		if (wasRecording && !isRecording && !hasProcessedAnswer) {
-			// 약간의 지연을 주어 transcript가 완전히 업데이트되도록 함
-			const timer = setTimeout(() => {
-				handleAnswerComplete();
-			}, 300);
-			return () => clearTimeout(timer);
-		}
-	}, [isRecording, hasProcessedAnswer, handleAnswerComplete]);
-
-	// 자동 일시정지 함수
-	const handleAutoPause = useCallback(() => {
-		setIsRecording(false);
-		// handleAnswerComplete는 useEffect에서 자동으로 호출됨
-	}, []);
-
-	// Voice Detection 훅 사용
-	const { analyserNode, cleanup } = useVoiceDetection({
-		isRecording,
-		onAutoPause: handleAutoPause,
-	});
-
-	// 마이크 시작/중지
-	const handleMicClick = useCallback(() => {
-		if (!isRecording) {
-			setIsRecording(true);
-		} else {
-			cleanup();
-			setIsRecording(false);
-			// handleAnswerComplete는 useEffect에서 자동으로 호출됨
-		}
-	}, [isRecording, cleanup]);
 
 	// 시간 포맷팅 (00:00)
 	const formatTime = (totalSeconds: number) => {
@@ -279,55 +126,6 @@ export default function CallPage() {
 						</div>
 					</div>
 				</div>
-
-				{/* 안내 문구 / 음성 파형 */}
-				{!isRecording ? (
-					<div
-						className="flex flex-col items-center"
-						style={{ gap: "clamp(0.5rem, 2vw, 0.75rem)" }}
-					>
-						<div className="text-caption text-gray-500 text-center">
-							마이크를 누르고 말해줘
-						</div>
-						<button
-							type="button"
-							onClick={handleMicClick}
-							className="bg-white rounded-full w-14 h-14 flex justify-center items-center"
-							aria-label="녹음 시작"
-						>
-							<div className="bg-primary-400 rounded-full w-8 h-8 flex justify-center items-center">
-								<Image src="/voice.svg" alt="" width={24} height={24} />
-							</div>
-						</button>
-					</div>
-				) : (
-					<div
-						className="flex flex-col items-center px-5 w-full max-w-[320px]"
-						style={{
-							gap: "clamp(0.5rem, 2vw, 0.75rem)",
-						}}
-					>
-						<div className="text-body-2 text-gray-600 text-center">
-							잘 듣고 있어요
-						</div>
-						<div className="bg-white rounded-full w-full flex items-center shadow-sm gap-3 pl-4 pr-3 py-3">
-							{/* 음성 파형 */}
-							<Waveform analyserNode={analyserNode} isActive={isRecording} />
-							{/* 일시정지 버튼 */}
-							<button
-								type="button"
-								onClick={handleMicClick}
-								className="bg-gray-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0"
-								aria-label="녹음 중지"
-							>
-								<div className="flex gap-[3px]">
-									<div className="w-[2px] h-3 bg-white rounded-full" />
-									<div className="w-[2px] h-3 bg-white rounded-full" />
-								</div>
-							</button>
-						</div>
-					</div>
-				)}
 			</div>
 
 			{/* 전화 종료 팝업 */}

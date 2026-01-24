@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import {
 	detailSituations,
 	type SituationId,
-} from "../../../../constants/detailSituations";
-import { practiceQuestions } from "../../../../constants/practiceQuestions";
-import { getSituationImagePath } from "../../../../utils/situationImage";
-import { PracticeOptionButton } from "../components/PracticeOptionButton";
+} from "../../../_constants/detailSituations";
+import { practiceQuestions } from "../../../_constants/practiceQuestions";
+import { getSituationImagePath } from "../../../_utils/situationImage";
+import { PracticeOptionButton } from "./components/PracticeOptionButton";
 
 interface PracticeQuestionPageProps {
 	params: Promise<{

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { practiceItems } from "../../../../constants/practiceItems";
+import { practiceItems } from "../../../_constants/practiceItems";
 import { DialPad } from "./components/DialPad";
 
 interface DialPageProps {

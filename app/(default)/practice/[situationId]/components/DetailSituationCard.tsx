@@ -1,7 +1,7 @@
 "use client";
 
 import { IconWrapper } from "@/components/icons/IconWrapper";
-import type { DetailSituation } from "../../../constants/detailSituations";
+import type { DetailSituation } from "../../_constants/detailSituations";
 
 interface DetailSituationCardProps {
 	situation: DetailSituation;

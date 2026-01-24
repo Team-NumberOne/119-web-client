@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { IconWrapper } from "@/components/icons/IconWrapper";
-import type { CarouselItem } from "../constants/practiceItems";
+import { useCarousel } from "../_hooks/useCarousel";
+import type { CarouselItem } from "../practice/_constants/practiceItems";
 
 interface EmergencySituationCarouselProps {
 	items: CarouselItem[];
@@ -13,40 +13,23 @@ export function EmergencySituationCarousel({
 	items,
 	onSelect,
 }: EmergencySituationCarouselProps) {
-	const [currentIndex, setCurrentIndex] = useState(0);
-
-	const currentItem = items?.[currentIndex];
-
-	// 초기 선택된 항목을 상위로 전달 (훅은 early return 전에 호출되어야 함)
-	useEffect(() => {
-		if (currentItem && onSelect) {
-			onSelect(currentItem.id);
-		}
-	}, [currentItem, onSelect]);
+	const {
+		currentIndex,
+		currentItem,
+		handlePrevious,
+		handleNext,
+		handleDotClick,
+	} = useCarousel({
+		items,
+		onSelect: onSelect
+			? (item) => {
+					onSelect(item.id);
+				}
+			: undefined,
+	});
 
 	// 안전장치: items가 비어있으면 렌더링 X
 	if (!items || items.length === 0) return null;
-
-	const handlePrevious = () => {
-		setCurrentIndex((prev) => {
-			const newIndex = prev === 0 ? items.length - 1 : prev - 1;
-			onSelect?.(items[newIndex].id);
-			return newIndex;
-		});
-	};
-
-	const handleNext = () => {
-		setCurrentIndex((prev) => {
-			const newIndex = prev === items.length - 1 ? 0 : prev + 1;
-			onSelect?.(items[newIndex].id);
-			return newIndex;
-		});
-	};
-
-	const handleDotClick = (index: number) => {
-		setCurrentIndex(index);
-		onSelect?.(items[index].id);
-	};
 
 	return (
 		<div className="w-full flex flex-col flex-1 min-h-0">

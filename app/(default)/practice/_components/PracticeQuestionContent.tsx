@@ -1,6 +1,6 @@
 "use client";
 
-import type { PracticeQuestion } from "../../../../constants/practiceQuestions";
+import type { PracticeQuestion } from "../_constants/practiceQuestions";
 
 interface PracticeQuestionContentProps {
 	question: PracticeQuestion;

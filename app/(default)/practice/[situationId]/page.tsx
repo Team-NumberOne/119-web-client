@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import {
 	detailSituations,
 	type SituationId,
-} from "../../constants/detailSituations";
+} from "../_constants/detailSituations";
 import { DetailSituationList } from "./components/DetailSituationList";
 import { DetailSituationTitle } from "./components/DetailSituationTitle";
 
@@ -26,7 +26,6 @@ export default async function DetailSituationPage({
 		<div className="h-full overflow-hidden flex flex-col bg-gray-50">
 			<DetailSituationTitle />
 
-			{/* 세부 상황 리스트 (스크롤 가능) */}
 			<DetailSituationList situationId={situationId} situations={situations} />
 		</div>
 	);

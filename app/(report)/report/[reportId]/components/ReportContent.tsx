@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@team-numberone/daepiro-design-system";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
 	detailSituations,
 	type SituationId,
-} from "@/app/(default)/constants/detailSituations";
+} from "@/app/(default)/practice/_constants/detailSituations";
 import { IconWrapper } from "@/components/icons/IconWrapper";
 import { useReport } from "../hooks/useReport";
 import {
@@ -107,9 +108,11 @@ export function ReportContent({ reportId }: ReportContentProps) {
 
 				{/* 트로피 이미지 */}
 				<div className="mb-4 flex justify-center">
-					<img
+					<Image
 						src={imagePath}
 						alt={result.title}
+						width={140}
+						height={140}
 						className="max-w-[140px] h-auto"
 					/>
 				</div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { DetailSituation } from "../../../constants/detailSituations";
+import type { DetailSituation } from "../../_constants/detailSituations";
 import { DetailSituationCard } from "./DetailSituationCard";
 
 interface DetailSituationListProps {
