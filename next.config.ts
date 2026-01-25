@@ -4,7 +4,14 @@ import type { NextConfig } from "next";
 const withVanillaExtract = createVanillaExtractPlugin();
 
 const nextConfig: NextConfig = {
-	/* config options here */
+	async rewrites() {
+		return [
+			{
+				source: "/api/:path*",
+				destination: "https://api.daepiro.site/api/:path*",
+			},
+		];
+	},
 };
 
 export default withVanillaExtract(nextConfig);
