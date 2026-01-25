@@ -18,8 +18,13 @@ class ApiClient {
 			return process.env.NEXT_PUBLIC_API_BASE_URL;
 		}
 
-		// 프로덕션에서는 rewrites가 작동하지 않을 수 있으므로 절대 URL 사용
-		return "https://api.daepiro.site/api/v1";
+		// 서버 사이드에서는 절대 경로 사용, 클라이언트 사이드에서는 상대 경로 사용
+		if (typeof window === "undefined") {
+			return "https://api.daepiro.site/api/v1";
+		}
+
+		// Use relative path for API calls to leverage Next.js rewrites
+		return "/api/v1";
 	}
 
 	async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
