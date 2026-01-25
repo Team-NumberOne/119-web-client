@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import {
 	detailSituations,
 	type SituationId,
-} from "../../../constants/detailSituations";
+} from "../../_constants/detailSituations";
 
 interface DetailSituationSelectPageProps {
 	params: Promise<{ situationId: string; detailId: string }>;

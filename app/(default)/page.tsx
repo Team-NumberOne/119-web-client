@@ -5,7 +5,7 @@ import { EmergencySituationCarousel } from "./components/EmergencySituationCarou
 import { PracticeSectionHeader } from "./components/PracticeSectionHeader";
 import { RandomPracticeCTA } from "./components/RandomPracticeCTA";
 import { StartPracticeButton } from "./components/StartPracticeButton";
-import { practiceItems } from "./constants/practiceItems";
+import { practiceItems } from "./practice/_constants/practiceItems";
 
 export default function HomePage() {
 	const [selectedSituationId, setSelectedSituationId] = useState<string>(

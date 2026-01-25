@@ -4,38 +4,72 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Detect } from "web-voice-detection";
 
 const SILENCE_DURATION_MS = 3000; // 3초
-const SPEECH_THRESHOLD = 0.7; // 일상 소음 필터링을 위한 임계값
+const SPEECH_THRESHOLD = 0.7; // 일상 소음 필터링 임계값
 const MIN_SPEECH_FRAMES = 3; // 최소 연속 음성 프레임 수
+
+// ✅ maxAlternatives 타입 누락 보강
+type SpeechRecognitionWithMaxAlt = SpeechRecognition & {
+	maxAlternatives?: number;
+};
+
+// ✅ onerror 이벤트 타입 보강
+type SpeechRecognitionErrorEventLike = Event & { error?: string };
 
 interface UseVoiceDetectionOptions {
 	isRecording: boolean;
 	onAutoPause: () => void;
+	onSpeechEnd?: (finalTranscript: string) => void; // ✅ 최종 transcript 전달
+	onSpeechResult?: (transcript: string) => void;
 }
 
 export function useVoiceDetection({
 	isRecording,
 	onAutoPause,
+	onSpeechEnd,
+	onSpeechResult,
 }: UseVoiceDetectionOptions) {
 	const detectRef = useRef<Detect | null>(null);
 	const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 	const frameCountRef = useRef<number>(0);
 	const streamRef = useRef<MediaStream | null>(null);
 	const analyserNodeRef = useRef<AnalyserNode | null>(null);
-	const speechFrameCountRef = useRef<number>(0); // 연속 음성 프레임 카운터
+	const speechFrameCountRef = useRef<number>(0);
+
+	const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+	// ✅ STT 관련 refs (onend 누락 대비)
+	const transcriptRef = useRef<string>("");
+	const pendingFinalizeRef = useRef<boolean>(false);
+
 	const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
 
-	// Voice Detection 정리 함수
 	const cleanup = useCallback(() => {
+		// SpeechRecognition 정리
+		if (recognitionRef.current) {
+			try {
+				recognitionRef.current.onresult = null;
+				recognitionRef.current.onerror = null;
+				recognitionRef.current.onend = null;
+				recognitionRef.current.stop();
+			} catch {
+				// ignore
+			}
+			recognitionRef.current = null;
+		}
+
+		pendingFinalizeRef.current = false;
+		transcriptRef.current = "";
+
 		// 타이머 정리
 		if (silenceTimerRef.current) {
 			clearTimeout(silenceTimerRef.current);
 			silenceTimerRef.current = null;
 		}
 
-		// 스트림 정리
+		// stream 정리
 		if (streamRef.current) {
-			streamRef.current.getTracks().forEach((track) => {
-				track.stop();
+			streamRef.current.getTracks().forEach((t) => {
+				t.stop();
 			});
 			streamRef.current = null;
 		}
@@ -46,7 +80,7 @@ export function useVoiceDetection({
 				detectRef.current.destroy();
 			} catch (error) {
 				if (error instanceof Error && error.name === "InvalidStateError") {
-					console.log("[Voice Detection] AudioContext 이미 닫혀있음");
+					console.log("[Voice Detection] AudioContext 이미 닫힘");
 				} else {
 					console.warn("[Voice Detection] detect destroy 오류:", error);
 				}
@@ -56,89 +90,161 @@ export function useVoiceDetection({
 
 		analyserNodeRef.current = null;
 		setAnalyserNode(null);
+
 		frameCountRef.current = 0;
 		speechFrameCountRef.current = 0;
 	}, []);
 
-	// 마이크 및 Voice Detection 초기화
 	useEffect(() => {
 		if (!isRecording) {
+			// 녹음이 꺼지면 리소스 정리
 			cleanup();
 			return;
 		}
 
 		let detectInstance: Detect | null = null;
 
+		// ✅ SpeechRecognition 초기화
+		const SR = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+		if (SR) {
+			const recognition = new SR();
+			recognition.lang = "ko-KR";
+			recognition.interimResults = false;
+			(recognition as SpeechRecognitionWithMaxAlt).maxAlternatives = 1;
+
+			recognition.onresult = (event: SpeechRecognitionEvent) => {
+				const last = event.results[event.results.length - 1];
+				const transcript = last?.[0]?.transcript ?? "";
+				transcriptRef.current = transcript;
+				onSpeechResult?.(transcript);
+			};
+
+			recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
+				if (event.error === "aborted") {
+					console.log("[SpeechRecognition] gracefully aborted");
+					return;
+				}
+				console.error("[SpeechRecognition] Error:", event.error);
+			};
+
+			recognition.onend = () => {
+				// ✅ stop() 후 onend가 오면 여기서 finalize
+				if (!pendingFinalizeRef.current) return;
+				pendingFinalizeRef.current = false;
+				const finalText = transcriptRef.current.trim();
+				onSpeechEnd?.(finalText);
+				transcriptRef.current = "";
+			};
+
+			recognitionRef.current = recognition;
+		} else {
+			console.warn("[SpeechRecognition] not supported");
+		}
+
 		const initRecording = async () => {
 			try {
 				console.log("[Voice Detection] 마이크 시작");
-				// 마이크 스트림 가져오기
 				const stream = await navigator.mediaDevices.getUserMedia({
 					audio: true,
 				});
 				streamRef.current = stream;
-				console.log("[Voice Detection] 스트림 획득 성공");
 
-				// web-voice-detection 초기화
-				console.log("[Voice Detection] 초기화 시작...");
+				// ✅ STT 시작
+				if (recognitionRef.current) {
+					try {
+						recognitionRef.current.start();
+					} catch (e) {
+						console.warn("[SpeechRecognition] start failed:", e);
+					}
+				}
+
+				console.log("[Voice Detection] Detect 초기화 시작...");
+
 				const detect = await Detect.new({
 					stream,
 					workletURL: "/worklet.js",
 					modelURL: "/model.onnx",
+
 					onSpeechStart: () => {
 						console.log("[Voice Detection] 음성 감지 시작");
+
+						// 말 시작하면 silence 타이머 해제
 						if (silenceTimerRef.current) {
-							console.log("[Voice Detection] 타이머 리셋");
 							clearTimeout(silenceTimerRef.current);
 							silenceTimerRef.current = null;
 						}
 					},
+
 					onSpeechEnd: (audio) => {
 						console.log("[Voice Detection] 음성 종료", {
 							audioLength: audio?.length,
 						});
+
+						// ✅ silence 타이머 정리
+						if (silenceTimerRef.current) {
+							clearTimeout(silenceTimerRef.current);
+							silenceTimerRef.current = null;
+						}
+
+						const finalize = () => {
+							const finalText = transcriptRef.current.trim();
+							onSpeechEnd?.(finalText);
+							transcriptRef.current = "";
+							pendingFinalizeRef.current = false;
+						};
+
+						// ✅ onend가 안 오는 브라우저 대비 fallback
+						if (recognitionRef.current) {
+							pendingFinalizeRef.current = true;
+
+							try {
+								recognitionRef.current.stop();
+							} catch {
+								finalize();
+								return;
+							}
+
+							setTimeout(() => {
+								if (pendingFinalizeRef.current) {
+									finalize();
+								}
+							}, 400);
+						} else {
+							finalize();
+						}
 					},
+
 					onMisfire: () => {
 						console.log("[Voice Detection] Misfire - 짧은 음성 감지");
 					},
-					onFrameProcessed: (frame) => {
-						// 일상 소음 필터링: 임계값을 높여서 더 확실한 음성만 감지
-						const isSpeech = frame.probabilities.isSpeech > SPEECH_THRESHOLD;
 
+					onFrameProcessed: (frame) => {
+						const isSpeech = frame.probabilities.isSpeech > SPEECH_THRESHOLD;
 						frameCountRef.current++;
 
-						// 디버깅 로그는 처음 10개만 출력
 						if (frameCountRef.current <= 10) {
-							const speechProb = frame.probabilities.isSpeech;
-							const notSpeechProb = frame.probabilities.notSpeech;
-							console.log("[Voice Detection] 프레임 처리", {
-								frameCount: frameCountRef.current,
+							console.log("[Voice Detection] frame", {
+								frame: frameCountRef.current,
 								isSpeech,
-								speechProb: speechProb.toFixed(3),
-								notSpeechProb: notSpeechProb.toFixed(3),
+								speechProb: frame.probabilities.isSpeech.toFixed(3),
+								notSpeechProb: frame.probabilities.notSpeech.toFixed(3),
 								hasTimer: !!silenceTimerRef.current,
 								speechFrameCount: speechFrameCountRef.current,
 							});
 						}
 
 						if (isSpeech) {
-							// 연속 음성 프레임 카운터 증가
 							speechFrameCountRef.current++;
 
-							// 최소 3프레임 이상 연속으로 음성이 감지되어야 실제 음성으로 인정
-							// (일상 소음은 보통 짧게 나타나므로)
 							if (speechFrameCountRef.current >= MIN_SPEECH_FRAMES) {
-								// 음성 감지 시 타이머가 있으면 리셋
 								if (silenceTimerRef.current) {
 									clearTimeout(silenceTimerRef.current);
 									silenceTimerRef.current = null;
 								}
 							}
 						} else {
-							// 음성이 아니면 연속 프레임 카운터 리셋
 							speechFrameCountRef.current = 0;
 
-							// 조용함 감지 시 타이머가 없으면 시작
 							if (!silenceTimerRef.current) {
 								silenceTimerRef.current = setTimeout(() => {
 									console.log("[Voice Detection] 3초 경과 - 자동 일시정지");
@@ -147,32 +253,22 @@ export function useVoiceDetection({
 							}
 						}
 					},
+
 					fftSize: 1024,
 				});
 
 				detectInstance = detect;
 				detectRef.current = detect;
 
-				console.log("[Voice Detection] 초기화 완료", {
-					listening: detect.listening,
-					analyserNode: detect.analyserNode,
-				});
-
 				if (!detect.listening) {
-					console.log("[Voice Detection] start() 호출 중...");
 					detect.start();
-					console.log("[Voice Detection] start() 호출 완료", {
-						listening: detect.listening,
-					});
 				}
 
-				// AnalyserNode 저장
 				if (detect.analyserNode) {
 					analyserNodeRef.current = detect.analyserNode;
 					setAnalyserNode(detect.analyserNode);
 					frameCountRef.current = 0;
 					speechFrameCountRef.current = 0;
-					console.log("[Waveform] AnalyserNode 설정 완료", detect.analyserNode);
 				} else {
 					console.warn("[Waveform] AnalyserNode가 없습니다");
 				}
@@ -185,30 +281,34 @@ export function useVoiceDetection({
 		initRecording();
 
 		return () => {
-			console.log("[Cleanup] useEffect cleanup 시작");
+			// 이 effect의 리소스 정리
+			// (cleanup이 isRecording=false 때도 호출되지만, 안전하게 중복 정리 가능)
+			if (recognitionRef.current) {
+				try {
+					recognitionRef.current.stop();
+				} catch {
+					// ignore
+				}
+			}
 
-			// 타이머 정리
 			if (silenceTimerRef.current) {
 				clearTimeout(silenceTimerRef.current);
 				silenceTimerRef.current = null;
 			}
 
-			// 스트림 정리
 			if (streamRef.current) {
-				streamRef.current.getTracks().forEach((track) => {
-					track.stop();
+				streamRef.current.getTracks().forEach((t) => {
+					t.stop();
 				});
 				streamRef.current = null;
 			}
 
-			// detect 정리 (detectRef.current가 아직 존재하는 경우에만)
-			// handleMicClick이나 handleAutoPause에서 이미 정리했을 수 있음
 			if (detectRef.current && detectRef.current === detectInstance) {
 				try {
 					detectInstance.destroy();
 				} catch (error) {
 					if (error instanceof Error && error.name === "InvalidStateError") {
-						console.log("[Cleanup] AudioContext 이미 닫혀있음");
+						console.log("[Cleanup] AudioContext 이미 닫힘");
 					} else {
 						console.warn("[Cleanup] detect destroy 오류:", error);
 					}
@@ -218,16 +318,16 @@ export function useVoiceDetection({
 			analyserNodeRef.current = null;
 			setAnalyserNode(null);
 
-			// 프레임 카운터 리셋
 			frameCountRef.current = 0;
 			speechFrameCountRef.current = 0;
 
-			console.log("[Cleanup] useEffect cleanup 완료");
+			pendingFinalizeRef.current = false;
+			transcriptRef.current = "";
 		};
-	}, [isRecording, onAutoPause, cleanup]);
+	}, [isRecording, onAutoPause, onSpeechEnd, onSpeechResult, cleanup]);
 
 	return {
 		analyserNode,
-		cleanup,
+		cleanup, // ✅ CallPage에서 리셋 버튼에 사용
 	};
 }

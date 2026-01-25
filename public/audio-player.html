@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Audio Player</title>
+</head>
+<body>
+	<script>
+		// iframe 내부에서 음성 파일 재생
+		let currentAudio = null;
+
+		// 부모 창으로부터 메시지 수신
+		window.addEventListener('message', async (event) => {
+			const { type, audioUrl } = event.data;
+
+			if (type === 'play') {
+				console.log('[AudioPlayer] 재생 요청 받음:', audioUrl);
+				
+				// 기존 재생 중지
+				if (currentAudio) {
+					currentAudio.pause();
+					currentAudio.currentTime = 0;
+					currentAudio = null;
+				}
+
+				if (!audioUrl) {
+					console.error('[AudioPlayer] 음성 파일 경로가 없습니다.');
+					parent.postMessage({ type: 'error', message: '음성 파일 경로가 없습니다.', audioUrl: '' }, '*');
+					return;
+				}
+
+				try {
+					console.log('[AudioPlayer] Audio 객체 생성 중:', audioUrl);
+					// 새 Audio 객체 생성
+					const audio = new Audio(audioUrl);
+					currentAudio = audio;
+
+					// 재생 완료
+					audio.onended = () => {
+						console.log('[AudioPlayer] 재생 완료:', audioUrl);
+						parent.postMessage({ type: 'ended', audioUrl }, '*');
+						currentAudio = null;
+					};
+
+					// 재생 오류
+					audio.onerror = (error) => {
+						console.error('[AudioPlayer] 재생 오류:', audioUrl, error);
+						console.error('[AudioPlayer] 오류 상세:', {
+							error: error,
+							networkState: audio.networkState,
+							readyState: audio.readyState,
+							src: audio.src
+						});
+						parent.postMessage({ 
+							type: 'error', 
+							message: `음성 파일 재생 실패: ${audioUrl}`, 
+							audioUrl,
+							error: error.toString(),
+							networkState: audio.networkState,
+							readyState: audio.readyState
+						}, '*');
+						currentAudio = null;
+					};
+
+					// 재생 시작
+					audio.onplay = () => {
+						console.log('[AudioPlayer] 재생 시작됨:', audioUrl);
+						parent.postMessage({ type: 'playing', audioUrl }, '*');
+					};
+
+					// 로드 완료
+					audio.oncanplay = () => {
+						console.log('[AudioPlayer] 재생 준비 완료:', audioUrl);
+					};
+
+					// 로드 실패
+					audio.onabort = () => {
+						console.error('[AudioPlayer] 재생 중단:', audioUrl);
+					};
+
+					console.log('[AudioPlayer] play() 호출 시도:', audioUrl);
+					// 재생 시도
+					await audio.play();
+					console.log('[AudioPlayer] play() 호출 완료:', audioUrl);
+				} catch (error) {
+					console.error('[AudioPlayer] 재생 실패 (catch):', audioUrl, error);
+					parent.postMessage({ 
+						type: 'error', 
+						message: '재생 실패', 
+						audioUrl,
+						error: error.message 
+					}, '*');
+					currentAudio = null;
+				}
+			} else if (type === 'stop') {
+				// 재생 중지
+				if (currentAudio) {
+					currentAudio.pause();
+					currentAudio.currentTime = 0;
+					currentAudio = null;
+					parent.postMessage({ type: 'stopped' }, '*');
+				}
+			}
+		});
+
+		// 준비 완료 메시지 전송
+		parent.postMessage({ type: 'ready' }, '*');
+	</script>
+</body>
+</html>

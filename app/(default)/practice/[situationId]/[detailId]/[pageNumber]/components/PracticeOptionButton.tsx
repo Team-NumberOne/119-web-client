@@ -3,7 +3,7 @@
 import { Button, Modal } from "@team-numberone/daepiro-design-system";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LottieAnimation } from "../../../../components/LottieAnimation";
+import { LottieAnimation } from "./LottieAnimation";
 
 interface PracticeOptionButtonProps {
 	children: React.ReactNode;
