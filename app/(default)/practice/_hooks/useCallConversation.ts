@@ -22,7 +22,6 @@ export function useCallConversation({
 	const [hasProcessedAnswer, setHasProcessedAnswer] = useState(false);
 	const conversationScriptRef = useRef<ConversationScript[]>([]);
 
-	// 질문 인덱스가 0으로 리셋될 때 대화 스크립트도 초기화
 	useEffect(() => {
 		if (currentQuestionIndex === 0) {
 			conversationScriptRef.current = [];
