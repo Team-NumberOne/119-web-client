@@ -52,17 +52,97 @@ export function useCallPage() {
 		},
 		[currentQuestion, currentQuestionIndex, callScript.start],
 	);
+	let cachedPublicIp: string | null = null;
+
+	const getPublicIp = useCallback(async (): Promise<string | null> => {
+		if (typeof window === "undefined") return null;
+		if (cachedPublicIp) return cachedPublicIp;
+
+		const controllers: AbortController[] = [];
+		const timeoutMs = 1500;
+
+		const fetchWithTimeout = async (
+			url: string,
+			parser: (res: Response) => Promise<string>,
+		) => {
+			const controller = new AbortController();
+			controllers.push(controller);
+
+			const timeout = setTimeout(() => controller.abort(), timeoutMs);
+			try {
+				const res = await fetch(url, {
+					method: "GET",
+					cache: "no-store",
+					signal: controller.signal,
+				});
+				if (!res.ok) return null;
+				const ip = (await parser(res)).trim();
+				// 아주 러프한 IPv4/IPv6 체크
+				if (!ip || ip.length < 7) return null;
+				return ip;
+			} catch {
+				return null;
+			} finally {
+				clearTimeout(timeout);
+			}
+		};
+
+		try {
+			// ✅ 1) ipify (json)
+			const ip1 = await fetchWithTimeout(
+				"https://api.ipify.org?format=json",
+				async (res) => {
+					const data = (await res.json()) as { ip?: string };
+					return data.ip ?? "";
+				},
+			);
+			if (ip1) {
+				cachedPublicIp = ip1;
+				return ip1;
+			}
+
+			// ✅ 2) ifconfig.me (text)
+			const ip2 = await fetchWithTimeout(
+				"https://ifconfig.me/ip",
+				async (res) => res.text(),
+			);
+			if (ip2) {
+				cachedPublicIp = ip2;
+				return ip2;
+			}
+
+			// ✅ 3) ident.me (text)
+			const ip3 = await fetchWithTimeout("https://ident.me", async (res) =>
+				res.text(),
+			);
+			if (ip3) {
+				cachedPublicIp = ip3;
+				return ip3;
+			}
+
+			return null;
+		} finally {
+			// 남은 요청 abort (혹시라도)
+			for (const c of controllers) {
+				try {
+					c.abort();
+				} catch {
+					// ignore
+				}
+			}
+		}
+	}, [cachedPublicIp]);
 
 	// ✅ API 제출: 기본은 ref 기준, 필요하면 override 가능
 	const submitReport = useCallback(
 		async (scriptOverride?: ConversationScript[]) => {
 			try {
 				const scriptToSend = scriptOverride ?? conversationRef.current;
-
+				const publicIp = await getPublicIp();
 				const response = await submitConversation({
 					id: situationId,
 					script: scriptToSend,
-					ip: "127.0.0.1", // Placeholder IP
+					ip: publicIp ?? "unknown",
 				});
 
 				setReportId(response.resultId);
@@ -72,7 +152,7 @@ export function useCallPage() {
 				return null;
 			}
 		},
-		[situationId],
+		[situationId, getPublicIp],
 	);
 
 	// detailId가 없으면 기본값 설정 (랜덤 연습 등에서 직접 접근한 경우)
