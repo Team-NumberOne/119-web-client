@@ -47,7 +47,7 @@ export default async function PracticeQuestionPage({
 	}
 
 	// 이미지 경로 가져오기 (상황별로 동일한 이미지 사용)
-	const imagePath = getSituationImagePath(situationId, pageIndex);
+	const imagePath = getSituationImagePath(situationId, detailId, pageIndex);
 
 	return (
 		<div className="h-full overflow-hidden flex flex-col gap-[28px]">
